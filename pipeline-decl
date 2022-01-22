@@ -1,0 +1,73 @@
+pipeline
+{
+agent any
+
+tools 
+{
+    maven 'maven3.8.4'
+}
+triggers{
+    pollSCM('* * * * *')
+}
+options
+{
+    timestamps()
+    buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '3', daysToKeepStr: '', numToKeepStr: '3'))
+}
+stages
+{
+stage('Checkout')
+{
+    steps{
+        git branch: 'development', credentialsId: 'GIT_CREDINTIALS', url: 'https://github.com/santhosh911/maven-web-application.git'
+    }
+}
+    stage('Build')
+    {
+        steps
+        {
+            sh "mvn clean package"
+        }
+    }
+    stage('Sonarqube report')
+    {
+        steps
+        {
+            sh "mvn sonar:sonar"
+        }
+    }
+    stage('UploadArtifactstoNexus')
+    {
+        steps
+        {
+            sh "mvn deploy"
+        }
+    }
+    stage('DeployAootoTomcat')
+    {
+        steps
+        {
+            sshagent(['6811fd2f-fc61-461f-92fc-0b7b9a10eea1']) {
+sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@3.110.182.164:/opt/apache-tomcat-9.0.55/webapps/"
+
+        }
+        }
+}
+         
+}
+post{
+         success{
+            emailext body: '''Build success DeclarativeWay
+
+regards 
+santhosh''', subject: 'Build Over', to: 'santhosh.sunday@gmail.com'
+        }
+        failure{
+            emailext body: '''Build failed DeclarativeWay
+
+regards 
+santhosh''', subject: 'Build Over', to: 'santhosh.sunday@gmail.com'
+        }
+    }
+
+}
