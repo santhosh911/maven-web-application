@@ -34,6 +34,6 @@ stage('SendEmail')
     emailext body: '''BuildOver Scripted way
 
 Regards
-Santosh''', subject: 'BuildOver Scripted way', to: 'santhosh.sunday@gmail.com'
+Santhu''', subject: 'BuildOver Scripted way', to: 'santhosh.sunday@gmail.com'
 }
 }
